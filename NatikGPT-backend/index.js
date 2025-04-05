@@ -1,35 +1,34 @@
-// Importation des bibliothèques nécessaires
+// Importer les bibliothèques nécessaires
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { Configuration, OpenAIApi } = require('openai');
+const { OpenAI } = require('openai'); // Changement ici, on utilise OpenAI au lieu de Configuration
 
-// Création du serveur Express
+// Initialiser le serveur Express
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Configuration de l'API OpenAI
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,  // Ta clé API ici
+// Initialisation de OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // Assure-toi d'avoir ta clé API dans .env
 });
 
-const openai = new OpenAIApi(configuration);
-
-// Route d'API pour recevoir un message et renvoyer une réponse d'OpenAI
+// Route pour gérer les messages du chat
 app.post('/api/chat', async (req, res) => {
   const { message } = req.body;
 
   try {
-    const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+    // Appeler l'API OpenAI pour générer la réponse
+    const response = await openai.chat.completions.create({
       messages: [{ role: 'user', content: message }],
+      model: 'gpt-3.5-turbo', // ou 'gpt-4' si tu veux utiliser GPT-4
     });
 
-    const reply = completion.data.choices[0].message.content;
-    res.json({ reply });
+    // Envoyer la réponse générée par OpenAI
+    res.json({ reply: response.choices[0].message.content });
   } catch (error) {
     console.error('Erreur OpenAI:', error);
     res.status(500).send('Erreur lors de la communication avec OpenAI');
