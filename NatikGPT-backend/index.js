@@ -1,5 +1,5 @@
 const express = require('express');
-const { Configuration, OpenAIApi } = require('openai');
+const { OpenAI } = require('openai');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
@@ -9,27 +9,23 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json()); // Permet de lire le JSON envoyé dans la requête
+app.use(express.json()); // Permet de lire les données JSON envoyées dans la requête
 
-const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY
+// Configuration de l'API OpenAI
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
-// Route pour gérer le chat
 app.post('/api/chat', async (req, res) => {
     try {
         const { message } = req.body;
 
-        // Utilisation de l'API OpenAI pour obtenir une réponse
-        const openAiResponse = await openai.createCompletion({
-            model: 'text-davinci-003',
-            prompt: message,
-            max_tokens: 150
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo", // ou autre modèle de ton choix
+            messages: [{ role: 'user', content: message }]
         });
 
-        // Envoi de la réponse au frontend
-        res.json({ reply: openAiResponse.data.choices[0].text.trim() });
+        res.json({ reply: response.choices[0].message.content });
     } catch (error) {
         console.error('Erreur OpenAI:', error);
         res.status(500).json({ reply: "Désolé, une erreur est survenue." });
